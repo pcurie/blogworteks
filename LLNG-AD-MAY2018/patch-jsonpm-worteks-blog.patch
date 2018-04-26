@@ -1,0 +1,45 @@
+From 95b30efe3d42a73807d6d3365a832cdbffd9f133 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Cl=C3=A9ment=20OUDOT?= <clem.oudot@gmail.com>
+Date: Thu, 7 Sep 2017 15:04:29 +0200
+Subject: [PATCH] Force allow_nonref option (fixes #14)
+
+---
+ lib/Apache/Session/Serialize/JSON.pm | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/Apache/Session/Serialize/JSON.pm b/lib/Apache/Session/Serialize/JSON.pm
+index aa88301..272fb38 100644
+--- a/lib/Apache/Session/Serialize/JSON.pm
++++ b/lib/Apache/Session/Serialize/JSON.pm
+@@ -4,16 +4,16 @@ package Apache::Session::Serialize::JSON;
+ use strict;
+ use JSON qw(to_json from_json);
+ 
+-our $VERSION = '1.2.2';
++our $VERSION = '1.2.6';
+ 
+ sub serialize {
+     my $session = shift;
+ 
+-    $session->{serialized} = to_json( $session->{data} );
++    $session->{serialized} = to_json( $session->{data}, { allow_nonref => 1 } );
+ }
+ 
+ sub unserialize {
+-    my ($session,$next) = @_;
++    my ( $session, $next ) = @_;
+ 
+     my $data = _unserialize( $session->{serialized}, $next );
+     die "Session could not be unserialized" unless defined $data;
+@@ -23,7 +23,7 @@ sub unserialize {
+ sub _unserialize {
+     my ( $serialized, $next ) = @_;
+     my $tmp;
+-    eval { $tmp = from_json($serialized) };
++    eval { $tmp = from_json( $serialized, { allow_nonref => 1 } ) };
+     if ($@) {
+         require Storable;
+         $next ||= \&Storable::thaw;
+-- 
+2.7.4
+
